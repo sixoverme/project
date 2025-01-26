@@ -11,17 +11,10 @@ import { InventoryCard } from './components/features/InventoryCard';
 import { InventoryDetailPage } from './components/features/InventoryDetailPage';
 import { AddClientPage } from './components/features/AddClientPage';
 import { EditClientPage } from './components/features/EditClientPage';
+import { ClientDetailPage } from './components/features/ClientDetailPage';
 import { clientService } from './services/clientService';
 
 type Page = 'dashboard' | 'clients' | 'jobs' | 'invoices' | 'inventory' | 'client-detail' | 'job-detail' | 'inventory-detail' | 'add-client' | 'edit-client';
-
-interface ClientDetailPageProps {
-  client: Client;
-  clientJobs: Job[];
-  clientInvoices: Invoice[];
-  onBack: () => void;
-  onJobClick: (id: string) => void;
-}
 
 interface PageState {
   type: Page;
@@ -141,11 +134,18 @@ function App() {
           onItemClick={(id) => setCurrentPage({ type: 'inventory-detail', inventoryId: id })}
         />;
       case 'client-detail':
+        const currentClient = clients.find(c => c.id === currentPage.clientId);
+        if (!currentClient) return null;
+        
+        const clientJobs = jobs.filter(j => j.clientId === currentPage.clientId);
+        const scheduledJobs = clientJobs.filter(job => job.status === 'scheduled');
+        const completedJobs = clientJobs.filter(job => job.status === 'completed');
+        
         return <ClientDetailPage 
-          client={clients.find(c => c.id === currentPage.clientId)!}
-          clientJobs={jobs.filter(j => j.clientId === currentPage.clientId)}
-          clientInvoices={invoices.filter(i => i.clientId === currentPage.clientId)}
-          onBack={() => setCurrentPage({ type: 'clients' })} 
+          client={currentClient}
+          scheduledJobs={scheduledJobs}
+          completedJobs={completedJobs}
+          onEditClient={() => setCurrentPage({ type: 'edit-client', clientId: currentPage.clientId })}
           onJobClick={(id) => setCurrentPage({ type: 'job-detail', jobId: id })}
         />;
       case 'job-detail':
@@ -239,316 +239,6 @@ function App() {
         </div>
       </nav>
     </div>
-  );
-}
-
-function ClientDetailPage({ client, clientJobs, clientInvoices, onBack, onJobClick }: ClientDetailPageProps) {
-  // Split jobs into scheduled and completed
-  const scheduledJobs = clientJobs.filter(job => job.status === 'scheduled');
-  const completedJobs = clientJobs.filter(job => job.status === 'completed');
-
-  return (
-    <div className="flex flex-col h-full bg-gray-50">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-white border-b">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-xl font-semibold">{client.name}</h1>
-        </div>
-        <button
-          className="px-4 py-2 bg-sage-green text-white rounded-md hover:bg-sage-green-dark"
-        >
-          Edit Client
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-y-auto">
-        {/* Left Column */}
-        <div className="space-y-4">
-          {/* Contact Information */}
-          <section className="bg-white rounded-lg p-4">
-            <h2 className="font-semibold mb-4">Contact Information</h2>
-            
-            {/* Addresses */}
-            <div className="space-y-3">
-              {client.addresses.map((address, index) => (
-                <div key={index} className="flex items-start gap-2">
-                  <MapPin className="w-5 h-5 text-gray-500 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-600">{address.type === 'primary' ? 'Primary' : 'Secondary'}</p>
-                    <p>{`${address.street}, ${address.city}, ${address.state}`}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Phone Numbers */}
-            <div className="mt-4 space-y-3">
-              {client.phoneNumbers.map((phone, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-600 capitalize">{phone.type}</p>
-                    <p>{phone.number}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Email */}
-            <div className="mt-4 flex items-center gap-2">
-              <Mail className="w-5 h-5 text-gray-500" />
-              <p>{client.email}</p>
-            </div>
-          </section>
-
-          {/* Notes */}
-          <section className="bg-white rounded-lg p-4">
-            <h2 className="font-semibold mb-4">Notes</h2>
-            <div className="space-y-4">
-              {client.notes.map((note, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded">
-                  <p className="text-sm text-gray-600 mb-1 capitalize">{note.type === 'general' ? 'General Notes' : 'Last Visit Notes'}</p>
-                  <p>{note.content}</p>
-                  <p className="text-sm text-gray-500 mt-1">{new Date(note.timestamp).toLocaleDateString()}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-4">
-          {/* Pet Information */}
-          {client.hasPets && (
-            <section className="bg-white rounded-lg p-4">
-              <h2 className="font-semibold mb-4">Pet Information</h2>
-              <div className="bg-sage-green/10 p-3 rounded">
-                {client.pets?.map((pet, index) => (
-                  <div key={index}>
-                    <p>{`${pet.count} ${pet.type}${pet.count > 1 ? 's' : ''}`}</p>
-                    {pet.temperament && <p className="text-sm text-gray-600">{pet.temperament}</p>}
-                    {pet.careInstructions && <p className="text-sm text-gray-600 mt-1">{pet.careInstructions}</p>}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Jobs */}
-          <section className="bg-white rounded-lg p-4">
-            <h2 className="font-semibold mb-4">Jobs</h2>
-            
-            {/* Scheduled Jobs */}
-            {scheduledJobs.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm text-gray-600 mb-2">Scheduled Jobs</h3>
-                <div className="space-y-2">
-                  {scheduledJobs.map(job => (
-                    <button
-                      key={job.id}
-                      onClick={() => onJobClick(job.id)}
-                      className="w-full flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100"
-                    >
-                      <div>
-                        <p className="font-medium">{job.type}</p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(job.scheduledDate).toLocaleString()}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Completed Jobs */}
-            {completedJobs.length > 0 && (
-              <div>
-                <h3 className="text-sm text-gray-600 mb-2">Completed Jobs</h3>
-                <div className="space-y-2">
-                  {completedJobs.map(job => (
-                    <button
-                      key={job.id}
-                      onClick={() => onJobClick(job.id)}
-                      className="w-full flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100"
-                    >
-                      <div>
-                        <p className="font-medium">{job.type}</p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(job.completedDate!).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DashboardPage({ 
-  clients, 
-  jobs, 
-  onJobClick,
-  showOverview,
-  onOverviewDismiss,
-  inventory,
-  onInventoryClick,
-  onViewAllInventory
-}: { 
-  clients: Client[], 
-  jobs: Job[], 
-  onJobClick: (id: string) => void,
-  showOverview: boolean,
-  onOverviewDismiss: () => void,
-  inventory: InventoryItem[],
-  onInventoryClick: (id: string) => void,
-  onViewAllInventory: () => void
-}) {
-  // Get current date
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Get start of current week (Sunday)
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay());
-
-  // Calculate financial metrics
-  const thisWeekJobs = jobs.filter(job => {
-    const jobDate = new Date(job.date);
-    jobDate.setHours(0, 0, 0, 0);
-    return jobDate >= startOfWeek && jobDate < today;
-  });
-
-  const todayJobs = jobs.filter(job => {
-    const jobDate = new Date(job.date);
-    jobDate.setHours(0, 0, 0, 0);
-    return jobDate.getTime() === today.getTime();
-  });
-
-  const allWeekJobs = jobs.filter(job => {
-    const jobDate = new Date(job.date);
-    jobDate.setHours(0, 0, 0, 0);
-    return jobDate >= startOfWeek;
-  });
-
-  // Calculate totals and paid counts
-  const weekBeforeTodayTotal = thisWeekJobs.reduce((sum, job) => sum + job.price, 0);
-  const weekBeforeTodayPaid = thisWeekJobs.filter(job => job.paymentStatus === 'Paid').length;
-
-  const todayTotal = todayJobs.reduce((sum, job) => sum + job.price, 0);
-  const todayPaid = todayJobs.filter(job => job.paymentStatus === 'Paid').length;
-
-  const weekTotal = allWeekJobs.reduce((sum, job) => sum + job.price, 0);
-  const weekPaid = allWeekJobs.filter(job => job.paymentStatus === 'Paid').length;
-
-  return (
-    <>
-      {showOverview && (
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-8 relative">
-          <button 
-            onClick={onOverviewDismiss}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-            <span className="sr-only">Dismiss overview</span>
-          </button>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Overview</h2>
-          <p className="text-gray-600 mb-4">
-            Welcome to J&S House Cleaners App, your all-in-one solution for managing your house cleaning business.
-          </p>
-          <ul className="space-y-2 text-gray-600">
-            <li>• Manage your clients</li>
-            <li>• Schedule and track jobs</li>
-            <li>• Handle invoices</li>
-            <li>• Keep track of your inventory</li>
-          </ul>
-        </div>
-      )}
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-sm text-gray-600 mb-2">Money made this week</h3>
-          <p className="text-2xl font-semibold text-green-600">${weekBeforeTodayTotal.toFixed(2)}</p>
-          <ProgressBar 
-            current={weekBeforeTodayPaid} 
-            total={thisWeekJobs.length}
-            label="Customers paid"
-          />
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-sm text-gray-600 mb-2">Money made today</h3>
-          <p className="text-2xl font-semibold text-green-600">${todayTotal.toFixed(2)}</p>
-          <ProgressBar 
-            current={todayPaid} 
-            total={todayJobs.length}
-            label="Customers paid"
-          />
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-sm text-gray-600 mb-2">Potential earnings this week</h3>
-          <p className="text-2xl font-semibold text-green-600">${weekTotal.toFixed(2)}</p>
-          <ProgressBar 
-            current={weekPaid} 
-            total={allWeekJobs.length}
-            label="Customers paid"
-          />
-        </div>
-      </div>
-
-      {/* Jobs Today */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Jobs Today</h2>
-        <div className="space-y-4">
-          {jobs.slice(0, 2).map(job => (
-            <JobCard
-              key={job.id}
-              job={job}
-              client={clients.find(c => c.id === job.clientId)!}
-              onClick={() => onJobClick(job.id)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Inventory Alerts */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-800">Inventory Alerts</h2>
-          <button 
-            onClick={onViewAllInventory}
-            className="text-green-600 hover:text-green-700"
-          >
-            View All
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-6">
-          {inventory
-            .filter(item => item.currentStock <= item.minStock)
-            .map(item => (
-              <InventoryCard
-                key={item.id}
-                item={item}
-                onClick={() => onInventoryClick(item.id)}
-              />
-            ))}
-        </div>
-      </div>
-    </>
   );
 }
 
@@ -816,6 +506,159 @@ function InventoryPage({ inventory, onItemClick }: { inventory: InventoryItem[],
             onClick={() => onItemClick(item.id)}
           />
         ))}
+      </div>
+    </>
+  );
+}
+
+function DashboardPage({ 
+  clients, 
+  jobs, 
+  onJobClick,
+  showOverview,
+  onOverviewDismiss,
+  inventory,
+  onInventoryClick,
+  onViewAllInventory
+}: { 
+  clients: Client[], 
+  jobs: Job[], 
+  onJobClick: (id: string) => void,
+  showOverview: boolean,
+  onOverviewDismiss: () => void,
+  inventory: InventoryItem[],
+  onInventoryClick: (id: string) => void,
+  onViewAllInventory: () => void
+}) {
+  // Get current date
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Get start of current week (Sunday)
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+
+  // Calculate financial metrics
+  const thisWeekJobs = jobs.filter(job => {
+    const jobDate = new Date(job.date);
+    jobDate.setHours(0, 0, 0, 0);
+    return jobDate >= startOfWeek && jobDate < today;
+  });
+
+  const todayJobs = jobs.filter(job => {
+    const jobDate = new Date(job.date);
+    jobDate.setHours(0, 0, 0, 0);
+    return jobDate.getTime() === today.getTime();
+  });
+
+  const allWeekJobs = jobs.filter(job => {
+    const jobDate = new Date(job.date);
+    jobDate.setHours(0, 0, 0, 0);
+    return jobDate >= startOfWeek;
+  });
+
+  // Calculate totals and paid counts
+  const weekBeforeTodayTotal = thisWeekJobs.reduce((sum, job) => sum + job.price, 0);
+  const weekBeforeTodayPaid = thisWeekJobs.filter(job => job.paymentStatus === 'Paid').length;
+
+  const todayTotal = todayJobs.reduce((sum, job) => sum + job.price, 0);
+  const todayPaid = todayJobs.filter(job => job.paymentStatus === 'Paid').length;
+
+  const weekTotal = allWeekJobs.reduce((sum, job) => sum + job.price, 0);
+  const weekPaid = allWeekJobs.filter(job => job.paymentStatus === 'Paid').length;
+
+  return (
+    <>
+      {showOverview && (
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-8 relative">
+          <button 
+            onClick={onOverviewDismiss}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+            <span className="sr-only">Dismiss overview</span>
+          </button>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Overview</h2>
+          <p className="text-gray-600 mb-4">
+            Welcome to J&S House Cleaners App, your all-in-one solution for managing your house cleaning business.
+          </p>
+          <ul className="space-y-2 text-gray-600">
+            <li>• Manage your clients</li>
+            <li>• Schedule and track jobs</li>
+            <li>• Handle invoices</li>
+            <li>• Keep track of your inventory</li>
+          </ul>
+        </div>
+      )}
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h3 className="text-sm text-gray-600 mb-2">Money made this week</h3>
+          <p className="text-2xl font-semibold text-green-600">${weekBeforeTodayTotal.toFixed(2)}</p>
+          <ProgressBar 
+            current={weekBeforeTodayPaid} 
+            total={thisWeekJobs.length}
+            label="Customers paid"
+          />
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h3 className="text-sm text-gray-600 mb-2">Money made today</h3>
+          <p className="text-2xl font-semibold text-green-600">${todayTotal.toFixed(2)}</p>
+          <ProgressBar 
+            current={todayPaid} 
+            total={todayJobs.length}
+            label="Customers paid"
+          />
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h3 className="text-sm text-gray-600 mb-2">Potential earnings this week</h3>
+          <p className="text-2xl font-semibold text-green-600">${weekTotal.toFixed(2)}</p>
+          <ProgressBar 
+            current={weekPaid} 
+            total={allWeekJobs.length}
+            label="Customers paid"
+          />
+        </div>
+      </div>
+
+      {/* Jobs Today */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Jobs Today</h2>
+        <div className="space-y-4">
+          {jobs.slice(0, 2).map(job => (
+            <JobCard
+              key={job.id}
+              job={job}
+              client={clients.find(c => c.id === job.clientId)!}
+              onClick={() => onJobClick(job.id)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Inventory Alerts */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-800">Inventory Alerts</h2>
+          <button 
+            onClick={onViewAllInventory}
+            className="text-green-600 hover:text-green-700"
+          >
+            View All
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          {inventory
+            .filter(item => item.currentStock <= item.minStock)
+            .map(item => (
+              <InventoryCard
+                key={item.id}
+                item={item}
+                onClick={() => onInventoryClick(item.id)}
+              />
+            ))}
+        </div>
       </div>
     </>
   );
