@@ -12,6 +12,13 @@ class InvoiceService {
    * Get all invoices
    */
   async getAllInvoices(): Promise<Invoice[]> {
+    return Promise.resolve(this.invoices.filter(i => !i.archived));
+  }
+
+  /**
+   * Get all invoices including archived
+   */
+  async getAllInvoicesWithArchived(): Promise<Invoice[]> {
     return Promise.resolve([...this.invoices]);
   }
 
@@ -91,6 +98,40 @@ class InvoiceService {
   async getInvoicesByStatus(status: string): Promise<Invoice[]> {
     const filteredInvoices = this.invoices.filter(invoice => invoice.status === status);
     return Promise.resolve(filteredInvoices);
+  }
+
+  /**
+   * Archive an invoice
+   */
+  async archiveInvoice(id: string): Promise<Invoice | null> {
+    const index = this.invoices.findIndex(i => i.id === id);
+    if (index === -1) return Promise.resolve(null);
+
+    const updatedInvoice: Invoice = {
+      ...this.invoices[index],
+      archived: true,
+      status: 'Archived',
+    };
+
+    this.invoices[index] = updatedInvoice;
+    return Promise.resolve(updatedInvoice);
+  }
+
+  /**
+   * Unarchive an invoice
+   */
+  async unarchiveInvoice(id: string): Promise<Invoice | null> {
+    const index = this.invoices.findIndex(i => i.id === id);
+    if (index === -1) return Promise.resolve(null);
+
+    const updatedInvoice: Invoice = {
+      ...this.invoices[index],
+      archived: false,
+      status: this.invoices[index].status === 'Archived' ? 'Pending' : this.invoices[index].status,
+    };
+
+    this.invoices[index] = updatedInvoice;
+    return Promise.resolve(updatedInvoice);
   }
 
   /**

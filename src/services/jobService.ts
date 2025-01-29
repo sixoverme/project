@@ -1,5 +1,5 @@
-import Job from '../interfaces/Job';
-import mockJobs from '../data/mockJobs';
+import { Job } from '../interfaces';
+import { mockJobs } from '../data/mockJobs';
 
 /**
  * Service class for handling job-related operations.
@@ -12,6 +12,13 @@ class JobService {
    * Get all jobs
    */
   async getAllJobs(): Promise<Job[]> {
+    return Promise.resolve(this.jobs.filter(j => !j.archived));
+  }
+
+  /**
+   * Get all jobs including archived
+   */
+  async getAllJobsWithArchived(): Promise<Job[]> {
     return Promise.resolve([...this.jobs]);
   }
 
@@ -35,9 +42,12 @@ class JobService {
    * Create a new job
    */
   async createJob(job: Omit<Job, 'id'>): Promise<Job> {
+    const now = new Date().toISOString();
     const newJob: Job = {
       ...job,
       id: `job-${Date.now()}`, // In real app, this would be handled by the backend
+      createdAt: now,
+      updatedAt: now
     };
     this.jobs.push(newJob);
     return Promise.resolve(newJob);
@@ -54,6 +64,7 @@ class JobService {
       ...this.jobs[index],
       ...updates,
       id, // Ensure ID doesn't change
+      updatedAt: new Date().toISOString()
     };
     this.jobs[index] = updatedJob;
     return Promise.resolve(updatedJob);
@@ -78,7 +89,7 @@ class JobService {
     const end = new Date(endDate);
     
     const jobsInRange = this.jobs.filter(job => {
-      const jobDate = new Date(job.date);
+      const jobDate = new Date(job.scheduledDate);
       return jobDate >= start && jobDate <= end;
     });
     
@@ -91,6 +102,42 @@ class JobService {
   async getJobsByStatus(status: string): Promise<Job[]> {
     const filteredJobs = this.jobs.filter(job => job.status === status);
     return Promise.resolve(filteredJobs);
+  }
+
+  /**
+   * Archive a job
+   */
+  async archiveJob(id: string): Promise<Job | null> {
+    const index = this.jobs.findIndex(j => j.id === id);
+    if (index === -1) return Promise.resolve(null);
+
+    const updatedJob: Job = {
+      ...this.jobs[index],
+      archived: true,
+      status: 'archived',
+      updatedAt: new Date().toISOString()
+    };
+
+    this.jobs[index] = updatedJob;
+    return Promise.resolve(updatedJob);
+  }
+
+  /**
+   * Unarchive a job
+   */
+  async unarchiveJob(id: string): Promise<Job | null> {
+    const index = this.jobs.findIndex(j => j.id === id);
+    if (index === -1) return Promise.resolve(null);
+
+    const updatedJob: Job = {
+      ...this.jobs[index],
+      archived: false,
+      status: this.jobs[index].status === 'archived' ? 'completed' : this.jobs[index].status,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.jobs[index] = updatedJob;
+    return Promise.resolve(updatedJob);
   }
 }
 

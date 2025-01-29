@@ -114,68 +114,47 @@ export const ClientForm: React.FC<ClientFormProps> = ({
   const isValid = Object.keys(errors).length === 0;
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={!isValid}
-          className={`px-4 py-2 rounded-md ${
-            isValid
-              ? 'bg-sage-green hover:bg-sage-green-dark text-white'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          {initialData ? 'Save Changes' : 'Add Client'}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-[var(--background-card)] rounded-lg shadow-sm">
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column - Contact Information */}
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-[var(--text-primary)]">
               Name *
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={e => handleInputChange('name', e.target.value)}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green ${
-                touched.name && errors.name ? 'border-red-500' : ''
+              className={`mt-1 block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)] ${
+                touched.name && errors.name ? 'border-[var(--status-error)]' : ''
               }`}
             />
             {touched.name && errors.name && (
-              <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+              <p className="mt-1 text-sm text-[var(--status-error)]">{errors.name}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-[var(--text-primary)]">
               Email *
             </label>
             <input
               type="email"
               value={formData.email}
               onChange={e => handleInputChange('email', e.target.value)}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green ${
-                touched.email && errors.email ? 'border-red-500' : ''
+              className={`mt-1 block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)] ${
+                touched.email && errors.email ? 'border-[var(--status-error)]' : ''
               }`}
             />
             {touched.email && errors.email && (
-              <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+              <p className="mt-1 text-sm text-[var(--status-error)]">{errors.email}</p>
             )}
           </div>
 
           {/* Primary Address */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-[var(--text-primary)]">
               Primary Address *
             </label>
             <div className="space-y-2">
@@ -184,7 +163,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                 placeholder="Street"
                 value={formData.addresses[0]?.street || ''}
                 onChange={e => handleAddressChange(0, 'street', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                className="mt-1 block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
               />
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -192,26 +171,26 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                   placeholder="City"
                   value={formData.addresses[0]?.city || ''}
                   onChange={e => handleAddressChange(0, 'city', e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                  className="block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
                 />
                 <input
                   type="text"
                   placeholder="State"
                   value={formData.addresses[0]?.state || ''}
                   onChange={e => handleAddressChange(0, 'state', e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                  className="block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
                 />
               </div>
             </div>
             {touched.addresses && errors.addresses && (
-              <p className="mt-1 text-sm text-red-500">{errors.addresses}</p>
+              <p className="mt-1 text-sm text-[var(--status-error)]">{errors.addresses}</p>
             )}
           </div>
 
-          {/* Secondary Address */}
+          {/* Secondary Address Button/Section */}
           {formData.addresses.find(a => a.type === 'secondary') ? (
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-[var(--text-primary)]">
                 Secondary Address
               </label>
               <div className="space-y-2">
@@ -220,7 +199,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                   placeholder="Street"
                   value={formData.addresses[1]?.street || ''}
                   onChange={e => handleAddressChange(1, 'street', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                  className="mt-1 block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -228,14 +207,14 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                     placeholder="City"
                     value={formData.addresses[1]?.city || ''}
                     onChange={e => handleAddressChange(1, 'city', e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                    className="block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
                   />
                   <input
                     type="text"
                     placeholder="State"
                     value={formData.addresses[1]?.state || ''}
                     onChange={e => handleAddressChange(1, 'state', e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                    className="block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
                   />
                 </div>
               </div>
@@ -244,7 +223,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
             <button
               type="button"
               onClick={handleAddSecondaryAddress}
-              className="text-sage-green hover:text-sage-green-dark text-sm"
+              className="text-[var(--juniper-sage)] hover:text-[var(--juniper-dark)] text-sm"
             >
               + Add Secondary Address
             </button>
@@ -255,7 +234,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
         <div className="space-y-6">
           {/* Mobile Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-[var(--text-primary)]">
               Mobile Phone *
             </label>
             <input
@@ -263,19 +242,19 @@ export const ClientForm: React.FC<ClientFormProps> = ({
               value={formData.phoneNumbers[0]?.number || ''}
               onChange={e => handlePhoneChange(0, e.target.value)}
               placeholder="(XXX) XXX-XXXX"
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green ${
-                touched.phoneNumbers && errors.phoneNumbers ? 'border-red-500' : ''
+              className={`mt-1 block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)] ${
+                touched.phoneNumbers && errors.phoneNumbers ? 'border-[var(--status-error)]' : ''
               }`}
             />
             {touched.phoneNumbers && errors.phoneNumbers && (
-              <p className="mt-1 text-sm text-red-500">{errors.phoneNumbers}</p>
+              <p className="mt-1 text-sm text-[var(--status-error)]">{errors.phoneNumbers}</p>
             )}
           </div>
 
-          {/* Home Phone */}
+          {/* Home Phone Button/Section */}
           {formData.phoneNumbers.find(p => p.type === 'home') ? (
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-[var(--text-primary)]">
                 Home Phone
               </label>
               <input
@@ -283,14 +262,14 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                 value={formData.phoneNumbers[1]?.number || ''}
                 onChange={e => handlePhoneChange(1, e.target.value)}
                 placeholder="(XXX) XXX-XXXX"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                className="mt-1 block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
               />
             </div>
           ) : (
             <button
               type="button"
               onClick={handleAddHomePhone}
-              className="text-sage-green hover:text-sage-green-dark text-sm"
+              className="text-[var(--juniper-sage)] hover:text-[var(--juniper-dark)] text-sm"
             >
               + Add Home Phone
             </button>
@@ -299,17 +278,17 @@ export const ClientForm: React.FC<ClientFormProps> = ({
           {/* Pet Information */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Has Pets</label>
+              <label className="text-sm font-medium text-[var(--text-primary)]">Has Pets</label>
               <input
                 type="checkbox"
                 checked={formData.hasPets}
                 onChange={e => handlePetToggle(e.target.checked)}
-                className="rounded text-sage-green focus:ring-sage-green"
+                className="rounded text-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
               />
             </div>
 
             {formData.hasPets && (
-              <div className="space-y-4 p-4 bg-sage-green/10 rounded-md">
+              <div className="space-y-4 p-4 bg-[var(--sage-mist)] rounded-md">
                 {formData.pets?.map((pet, index) => (
                   <div key={index} className="space-y-2">
                     <div className="grid grid-cols-2 gap-2">
@@ -322,7 +301,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                           newPets[index] = { ...pet, type: e.target.value };
                           handleInputChange('pets', newPets);
                         }}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                        className="block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
                       />
                       <input
                         type="number"
@@ -333,7 +312,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                           newPets[index] = { ...pet, count: parseInt(e.target.value) };
                           handleInputChange('pets', newPets);
                         }}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                        className="block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
                       />
                     </div>
                     <input
@@ -345,7 +324,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                         newPets[index] = { ...pet, careInstructions: e.target.value };
                         handleInputChange('pets', newPets);
                       }}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+                      className="block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
                     />
                   </div>
                 ))}
@@ -355,7 +334,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                     const newPets = [...(formData.pets || []), { type: '', count: 1 }];
                     handleInputChange('pets', newPets);
                   }}
-                  className="text-sage-green hover:text-sage-green-dark text-sm"
+                  className="text-[var(--juniper-sage)] hover:text-[var(--juniper-dark)] text-sm"
                 >
                   + Add Pet
                 </button>
@@ -365,7 +344,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-[var(--text-primary)]">
               General Notes
             </label>
             <textarea
@@ -380,7 +359,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
                 handleInputChange('notes', newNotes);
               }}
               rows={4}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sage-green focus:ring-sage-green"
+              className="mt-1 block w-full rounded-md border-[var(--background-muted)] shadow-sm focus:border-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]"
             />
           </div>
         </div>

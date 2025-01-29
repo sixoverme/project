@@ -1,62 +1,109 @@
 import { Job } from '../interfaces';
 
 /**
+ * Helper function to get today's date string
+ */
+function getTodayString() {
+  return new Date().toISOString();
+}
+
+/**
  * Mock job data for initial development and testing.
  * This data represents cleaning jobs scheduled or completed for clients.
  */
-const mockJobs: Job[] = [
+const createMockJobs = (): Job[] => [
   {
     id: 'job-1',
     clientId: '1',
     type: 'Regular Cleaning',
     status: 'scheduled',
-    scheduledDate: '2025-01-17T10:00:00Z',
+    scheduledDate: getTodayString(), // Today
     notes: 'Bi-weekly cleaning',
-    createdAt: '2025-01-10T09:00:00Z',
-    updatedAt: '2025-01-10T09:00:00Z'
+    price: 120.00,
+    paymentStatus: 'Unpaid',
+    address: {
+      street: '123 Maple Street',
+      city: 'Springfield',
+      state: 'IL',
+      type: 'primary'
+    },
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+    updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'job-2',
     clientId: '1',
     type: 'Deep Cleaning',
     status: 'scheduled',
-    scheduledDate: '2025-02-01T14:00:00Z',
+    scheduledDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days from now
     notes: 'Monthly deep clean',
-    createdAt: '2025-01-15T11:30:00Z',
-    updatedAt: '2025-01-15T11:30:00Z'
+    price: 250.00,
+    paymentStatus: 'Unpaid',
+    address: {
+      street: '456 Oak Avenue',
+      city: 'Springfield',
+      state: 'IL',
+      type: 'secondary'
+    },
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'job-3',
     clientId: '1',
     type: 'Regular Cleaning',
     status: 'completed',
-    scheduledDate: '2025-01-24T15:30:00Z',
-    completedDate: '2025-01-24T17:00:00Z',
+    scheduledDate: getTodayString(), // Today
+    completedDate: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
     notes: 'Windows and kitchen cabinets detailed',
-    createdAt: '2025-01-17T09:00:00Z',
-    updatedAt: '2025-01-24T17:00:00Z'
+    price: 150.00,
+    paymentStatus: 'Paid',
+    address: {
+      street: '123 Maple Street',
+      city: 'Springfield',
+      state: 'IL',
+      type: 'primary'
+    },
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: 'job-4',
     clientId: '2',
     type: 'Regular Cleaning',
     status: 'scheduled',
-    scheduledDate: '2025-01-31T09:00:00Z',
+    scheduledDate: getTodayString(), // Today
     notes: 'Use keypad entry code',
-    createdAt: '2025-01-24T10:00:00Z',
-    updatedAt: '2025-01-24T10:00:00Z'
+    price: 100.00,
+    paymentStatus: 'Unpaid',
+    address: {
+      street: '789 Pine Road',
+      city: 'Springfield',
+      state: 'IL',
+      type: 'primary'
+    },
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'job-5',
     clientId: '3',
     type: 'Deep Cleaning',
     status: 'completed',
-    scheduledDate: '2025-01-23T14:00:00Z',
-    completedDate: '2025-01-23T16:45:00Z',
-    notes: 'Deep cleaned carpets and sanitized bathroom',
-    createdAt: '2025-01-16T13:00:00Z',
-    updatedAt: '2025-01-23T16:45:00Z'
+    scheduledDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+    completedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString(),
+    notes: 'Post-renovation cleaning',
+    price: 300.00,
+    paymentStatus: 'Paid',
+    address: {
+      street: '321 Elm Court',
+      city: 'Springfield',
+      state: 'IL',
+      type: 'primary'
+    },
+    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
   }
 ];
 
-export default mockJobs;
+export const mockJobs = createMockJobs();

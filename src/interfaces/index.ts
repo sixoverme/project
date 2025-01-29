@@ -35,11 +35,12 @@ export interface Client {
   notes: Note[];
   createdAt: string;
   updatedAt: string;
+  archived?: boolean;
 }
 
 // Job interfaces
 export type JobType = 'Regular Cleaning' | 'Deep Cleaning';
-export type JobStatus = 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+export type JobStatus = 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'archived';
 
 export interface Job {
   id: string;
@@ -48,9 +49,20 @@ export interface Job {
   status: JobStatus;
   scheduledDate: string;
   completedDate?: string;
+  duration?: string;  // Format: "2 hours" or "90 minutes"
+  amount?: number;    // Amount due in dollars
+  price: number;
+  paymentStatus: 'Paid' | 'Unpaid';
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    type: string;
+  };
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  archived?: boolean;
 }
 
 export interface Invoice {
@@ -60,12 +72,13 @@ export interface Invoice {
   date: string;
   dueDate: string;
   amount: number;
-  status: 'Paid' | 'Pending' | 'Overdue';
+  status: 'Paid' | 'Pending' | 'Overdue' | 'Archived';
   items: {
     description: string;
     amount: number;
     jobId: string;
   }[];
+  archived?: boolean;
 }
 
 export interface InventoryItem {

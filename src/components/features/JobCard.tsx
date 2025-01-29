@@ -1,6 +1,6 @@
 import React from 'react';
-import { MapPin, Clock } from 'lucide-react';
-import type { Job, Client } from '../../interfaces';
+import { MapPin, Clock, Edit, DollarSign, Briefcase } from 'lucide-react';
+import { Job, Client } from '../../interfaces';
 
 interface JobCardProps {
   job: Job;
@@ -8,26 +8,84 @@ interface JobCardProps {
   onClick: () => void;
 }
 
+const getStatusColor = (status: string): string => {
+  switch (status.toLowerCase()) {
+    case 'scheduled':
+      return 'text-[var(--status-warning)]';
+    case 'in_progress':
+      return 'text-[var(--status-info)]';
+    case 'completed':
+      return 'text-[var(--status-success)]';
+    case 'cancelled':
+      return 'text-[var(--status-error)]';
+    case 'archived':
+      return 'text-[var(--text-secondary)]';
+    default:
+      return 'text-[var(--text-secondary)]';
+  }
+};
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }) + ' at ' + date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
+}
+
+function formatAddress(address: Job['address']): string {
+  return `${address.street}, ${address.city}, ${address.state}`;
+}
+
 export function JobCard({ job, client, onClick }: JobCardProps) {
+  const statusColor = getStatusColor(job.status);
+  
   return (
     <div 
-      className="bg-white p-6 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-4">
-        <h3 className="font-semibold text-gray-800">
-          {client.name}
-        </h3>
-        <span className="text-green-600">9:00 AM</span>
-      </div>
-      <div className="space-y-2">
-        <div className="flex items-center text-gray-600">
-          <MapPin className="h-4 w-4 mr-2" />
-          <span>{client.address}</span>
+        <div>
+          <h3 className="text-lg font-medium text-[var(--text-primary)]">{client.name}</h3>
+          <span className={`text-sm font-medium capitalize ${statusColor}`}>
+            {job.status}
+          </span>
         </div>
-        <div className="flex items-center text-gray-600">
-          <Clock className="h-4 w-4 mr-2" />
-          <span>2 hours - {job.type}</span>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-start gap-2">
+          <MapPin className="w-4 h-4 text-[var(--juniper-sage)] mt-1 shrink-0" />
+          <p className="text-sm text-[var(--text-secondary)]">
+            {formatAddress(job.address)}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-[var(--juniper-sage)] shrink-0" />
+          <p className="text-sm text-[var(--text-secondary)]">
+            {formatDate(job.scheduledDate)}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Briefcase className="w-4 h-4 text-[var(--juniper-sage)] shrink-0" />
+          <p className="text-sm text-[var(--text-secondary)]">
+            {job.type}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-4 h-4 text-[var(--juniper-sage)] shrink-0" />
+          <p className="text-sm text-[var(--text-secondary)]">
+            ${job.price.toFixed(2)} - {job.paymentStatus}
+          </p>
         </div>
       </div>
     </div>

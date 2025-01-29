@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import './styles/colors.css';
 import { Settings, User, X, MapPin, Clock, AlertTriangle, DollarSign, Search, Plus, Filter, FileText, Package, ChevronRight, Edit, Trash2, ArrowLeft, Phone, Mail, Calendar, Home } from 'lucide-react';
-import mockJobs from './data/mockJobs';
+import { mockJobs } from './data/mockJobs';
 import mockInvoices from './data/mockInvoices';
 import mockInventoryItems from './data/mockInventoryItems';
 import type { Client, Job, Invoice, InventoryItem } from './interfaces';
@@ -11,10 +12,15 @@ import { InventoryCard } from './components/features/InventoryCard';
 import { InventoryDetailPage } from './components/features/InventoryDetailPage';
 import { AddClientPage } from './components/features/AddClientPage';
 import { EditClientPage } from './components/features/EditClientPage';
+import { EditJobPage } from './components/features/EditJobPage';
+import { AddJobPage } from './components/features/AddJobPage';
 import { ClientDetailPage } from './components/features/ClientDetailPage';
+import { ClientsPage } from './components/features/ClientsPage';
+import { JobsPage } from './components/features/JobsPage';
 import { clientService } from './services/clientService';
+import { jobService } from './services/jobService';
 
-type Page = 'dashboard' | 'clients' | 'jobs' | 'invoices' | 'inventory' | 'client-detail' | 'job-detail' | 'inventory-detail' | 'add-client' | 'edit-client';
+type Page = 'dashboard' | 'clients' | 'jobs' | 'invoices' | 'inventory' | 'client-detail' | 'job-detail' | 'inventory-detail' | 'add-client' | 'edit-client' | 'edit-job' | 'schedule-job';
 
 interface PageState {
   type: Page;
@@ -26,7 +32,7 @@ interface PageState {
 function App() {
   const [currentPage, setCurrentPage] = useState<PageState>({ type: 'dashboard' });
   const [clients, setClients] = useState<Client[]>([]);
-  const [jobs] = useState<Job[]>(mockJobs);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [invoices] = useState<Invoice[]>(mockInvoices);
   const [inventory] = useState<InventoryItem[]>(mockInventoryItems);
   const [isOverviewDismissed, setIsOverviewDismissed] = useState<boolean>(() => {
@@ -34,14 +40,24 @@ function App() {
     return stored === 'true';
   });
 
-  // Load initial clients
+  // Load initial clients and jobs
   useEffect(() => {
-    const loadClients = async () => {
-      const allClients = await clientService.getAllClients();
-      console.log('Loaded clients:', allClients);
-      setClients(allClients);
+    const loadData = async () => {
+      try {
+        // Load clients
+        const allClients = await clientService.getAllClients();
+        console.log('Loaded clients:', allClients);
+        setClients(allClients);
+
+        // Load jobs from jobService
+        const allJobs = await jobService.getAllJobs();
+        console.log('Loaded jobs:', allJobs);
+        setJobs(allJobs);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
     };
-    loadClients();
+    loadData();
   }, []);
 
   const handleOverviewDismiss = () => {
@@ -74,6 +90,82 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to update client:', error);
+    }
+  };
+
+  const handleDeleteClient = async (id: string) => {
+    try {
+      const success = await clientService.deleteClient(id);
+      if (success) {
+        // Remove the client from local state
+        setClients(prevClients => prevClients.filter(c => c.id !== id));
+        // Navigate back to clients list
+        setCurrentPage({ type: 'clients' });
+      }
+    } catch (error) {
+      console.error('Failed to delete client:', error);
+    }
+  };
+
+  const handleArchiveClient = async (id: string) => {
+    try {
+      const archivedClient = await clientService.archiveClient(id);
+      if (archivedClient) {
+        // Update the local state
+        setClients(prevClients => 
+          prevClients.map(c => c.id === id ? archivedClient : c)
+        );
+        // Navigate back to clients list
+        setCurrentPage({ type: 'clients' });
+      }
+    } catch (error) {
+      console.error('Failed to archive client:', error);
+    }
+  };
+
+  const handleScheduleJob = async (jobData: Omit<Job, 'id'>) => {
+    try {
+      const newJob = await jobService.createJob(jobData);
+      setJobs(prevJobs => [...prevJobs, newJob]);
+      setCurrentPage({ type: 'jobs' });
+    } catch (error) {
+      console.error('Failed to schedule job:', error);
+    }
+  };
+
+  const handleEditJob = async (id: string, updates: Partial<Job>) => {
+    try {
+      const updatedJob = await jobService.updateJob(id, updates);
+      if (updatedJob) {
+        setJobs(prevJobs => prevJobs.map(j => j.id === id ? updatedJob : j));
+        setCurrentPage({ type: 'jobs' });
+      }
+    } catch (error) {
+      console.error('Failed to update job:', error);
+    }
+  };
+
+  const handleArchiveJob = async (id: string) => {
+    try {
+      const archivedJob = await jobService.archiveJob(id);
+      if (archivedJob) {
+        setJobs(prevJobs => prevJobs.map(j => j.id === id ? archivedJob : j));
+        setCurrentPage({ type: 'jobs' });
+      }
+    } catch (error) {
+      console.error('Failed to archive job:', error);
+    }
+  };
+
+  const handleDeleteJob = async (id: string) => {
+    try {
+      const success = await jobService.deleteJob(id);
+      if (success) {
+        setJobs(prevJobs => prevJobs.filter(j => j.id !== id));
+        setCurrentPage({ type: 'jobs' });
+      }
+    } catch (error) {
+      console.error('Failed to delete job:', error);
     }
   };
 
@@ -118,6 +210,8 @@ function App() {
           client={clientToEdit}
           onSubmit={(data) => handleUpdateClient(clientToEdit.id, data)}
           onCancel={() => setCurrentPage({ type: 'clients' })}
+          onArchive={() => handleArchiveClient(clientToEdit.id)}
+          onDelete={() => handleDeleteClient(clientToEdit.id)}
         />;
       case 'jobs':
         return <JobsPage 
@@ -125,6 +219,7 @@ function App() {
           clients={clients} 
           onClientClick={(id) => setCurrentPage({ type: 'client-detail', clientId: id })}
           onJobClick={(id) => setCurrentPage({ type: 'job-detail', jobId: id })}
+          onScheduleJob={() => setCurrentPage({ type: 'schedule-job' })}
         />;
       case 'invoices':
         return <InvoicesPage invoices={invoices} clients={clients} onClientClick={(id) => setCurrentPage({ type: 'client-detail', clientId: id })} />;
@@ -138,8 +233,8 @@ function App() {
         if (!currentClient) return null;
         
         const clientJobs = jobs.filter(j => j.clientId === currentPage.clientId);
-        const scheduledJobs = clientJobs.filter(job => job.status === 'scheduled');
-        const completedJobs = clientJobs.filter(job => job.status === 'completed');
+        const scheduledJobs = clientJobs.filter(job => job.status.toLowerCase() === 'scheduled');
+        const completedJobs = clientJobs.filter(job => job.status.toLowerCase() === 'completed');
         
         return <ClientDetailPage 
           client={currentClient}
@@ -147,13 +242,36 @@ function App() {
           completedJobs={completedJobs}
           onEditClient={() => setCurrentPage({ type: 'edit-client', clientId: currentPage.clientId })}
           onJobClick={(id) => setCurrentPage({ type: 'job-detail', jobId: id })}
+          onBackClick={() => setCurrentPage({ type: 'clients' })}
         />;
       case 'job-detail':
-        const job = jobs.find(j => j.id === currentPage.jobId)!;
+        console.log('Rendering job detail page. JobId:', currentPage.jobId);
+        const job = jobs.find(j => j.id === currentPage.jobId);
+        if (!job) {
+          console.error('Job not found:', currentPage.jobId, 'Available jobs:', jobs.map(j => j.id));
+          setCurrentPage({ type: 'jobs' });
+          return null;
+        }
+        console.log('Found job:', job);
+        
+        const jobClient = clients.find(c => c.id === job.clientId);
+        if (!jobClient) {
+          console.error('Client not found for job:', job.clientId, 'Available clients:', clients.map(c => c.id));
+          setCurrentPage({ type: 'jobs' });
+          return null;
+        }
+        console.log('Found client:', jobClient);
+        
         return <JobDetailPage 
           job={job}
-          client={clients.find(c => c.id === job.clientId)!}
-          onBack={() => setCurrentPage({ type: 'jobs' })} 
+          client={jobClient}
+          onBack={() => setCurrentPage({ type: 'jobs' })}
+          onEdit={() => setCurrentPage({ type: 'edit-job', jobId: job.id })}
+          onArchive={() => handleArchiveJob(job.id)}
+          onDelete={() => handleDeleteJob(job.id)}
+          onStatusChange={(status) => handleEditJob(job.id, { status })}
+          onGenerateInvoice={() => {/* TODO: Implement invoice generation */}}
+          onRecordPayment={() => {/* TODO: Implement payment recording */}}
         />;
       case 'inventory-detail':
         const item = inventory.find(i => i.id === currentPage.inventoryId)!;
@@ -161,10 +279,32 @@ function App() {
           item={item}
           onBack={() => setCurrentPage({ type: 'inventory' })}
         />;
+      case 'edit-job':
+        const jobToEdit = jobs.find(j => j.id === currentPage.jobId);
+        if (!jobToEdit) {
+          console.error('Job not found:', currentPage.jobId);
+          return null;
+        }
+        return <EditJobPage 
+          job={jobToEdit}
+          onSubmit={(data) => handleEditJob(jobToEdit.id, data)}
+          onCancel={() => setCurrentPage({ type: 'jobs' })}
+          onDelete={() => handleDeleteJob(jobToEdit.id)}
+          onRecordPayment={() => {
+            console.log('Record payment for job:', jobToEdit.id);
+            // TODO: Implement payment recording
+          }}
+          onArchive={() => handleArchiveJob(jobToEdit.id)}
+        />;
+      case 'schedule-job':
+        return <AddJobPage 
+          onSubmit={handleScheduleJob}
+          onCancel={() => setCurrentPage({ type: 'jobs' })}
+        />;
       default:
         return <DashboardPage 
           clients={clients}
-          jobs={jobs.filter(j => j.status === 'Scheduled')}
+          jobs={jobs.filter(job => job.status.toLowerCase() === 'scheduled')}
           onJobClick={(id) => setCurrentPage({ type: 'job-detail', jobId: id })}
           showOverview={!isOverviewDismissed}
           onOverviewDismiss={handleOverviewDismiss}
@@ -176,16 +316,16 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
+    <div className="h-screen flex flex-col overflow-hidden bg-[var(--background-base)]">
       {/* Fixed Header */}
-      <header className="flex-none border-b bg-[#526D4E] px-6 py-4">
+      <header className="flex-none border-b bg-[var(--juniper-sage)] px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-white">J&S House Cleaners App</h1>
+          <h1 className="text-xl font-semibold text-[var(--text-on-colored)]">J&S House Cleaners App</h1>
           <div className="flex items-center gap-4">
-            <span className="text-gray-100">Welcome, Sarah</span>
-            <Settings className="h-5 w-5 text-gray-100" />
-            <User className="h-5 w-5 text-gray-100" />
-            <button className="text-gray-100">
+            <span className="text-[var(--text-on-colored)]">Welcome, Sarah</span>
+            <Settings className="h-5 w-5 text-[var(--text-on-colored)]" />
+            <User className="h-5 w-5 text-[var(--text-on-colored)]" />
+            <button className="text-[var(--text-on-colored)]">
               <span className="sr-only">Menu</span>
               ≡
             </button>
@@ -199,38 +339,38 @@ function App() {
       </main>
 
       {/* Fixed Bottom Navigation */}
-      <nav className="flex-none bg-[#526D4E] border-t border-[#455B41]">
+      <nav className="flex-none bg-[var(--juniper-sage)] border-t border-[var(--juniper-dark)]">
         <div className="grid grid-cols-5 gap-4 px-6 py-4">
           <button 
-            className={`flex flex-col items-center text-xs ${currentPage.type === 'clients' ? 'text-white' : 'text-gray-200'}`}
+            className={`flex flex-col items-center text-xs ${currentPage.type === 'clients' ? 'text-[var(--text-on-colored)]' : 'text-[var(--text-on-colored)] opacity-80'}`}
             onClick={() => setCurrentPage({ type: 'clients' })}
           >
             <User className="h-5 w-5 mb-1" />
             <span>Clients</span>
           </button>
           <button 
-            className={`flex flex-col items-center text-xs ${currentPage.type === 'jobs' ? 'text-white' : 'text-gray-200'}`}
+            className={`flex flex-col items-center text-xs ${currentPage.type === 'jobs' ? 'text-[var(--text-on-colored)]' : 'text-[var(--text-on-colored)] opacity-80'}`}
             onClick={() => setCurrentPage({ type: 'jobs' })}
           >
             <Clock className="h-5 w-5 mb-1" />
             <span>Jobs</span>
           </button>
           <button 
-            className={`flex flex-col items-center text-xs ${currentPage.type === 'dashboard' ? 'text-white' : 'text-gray-200'}`}
+            className={`flex flex-col items-center text-xs ${currentPage.type === 'dashboard' ? 'text-[var(--text-on-colored)]' : 'text-[var(--text-on-colored)] opacity-80'}`}
             onClick={() => setCurrentPage({ type: 'dashboard' })}
           >
             <MapPin className="h-5 w-5 mb-1" />
             <span>Dashboard</span>
           </button>
           <button 
-            className={`flex flex-col items-center text-xs ${currentPage.type === 'invoices' ? 'text-white' : 'text-gray-200'}`}
+            className={`flex flex-col items-center text-xs ${currentPage.type === 'invoices' ? 'text-[var(--text-on-colored)]' : 'text-[var(--text-on-colored)] opacity-80'}`}
             onClick={() => setCurrentPage({ type: 'invoices' })}
           >
             <DollarSign className="h-5 w-5 mb-1" />
             <span>Invoices</span>
           </button>
           <button 
-            className={`flex flex-col items-center text-xs ${currentPage.type === 'inventory' ? 'text-white' : 'text-gray-200'}`}
+            className={`flex flex-col items-center text-xs ${currentPage.type === 'inventory' ? 'text-[var(--text-on-colored)]' : 'text-[var(--text-on-colored)] opacity-80'}`}
             onClick={() => setCurrentPage({ type: 'inventory' })}
           >
             <AlertTriangle className="h-5 w-5 mb-1" />
@@ -239,152 +379,6 @@ function App() {
         </div>
       </nav>
     </div>
-  );
-}
-
-function ClientsPage({ clients, onClientClick, onAddClient, onEditClient }: { clients: Client[], onClientClick: (id: string) => void, onAddClient: () => void, onEditClient: (id: string) => void }) {
-  return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Clients</h2>
-        <button 
-          onClick={onAddClient}
-          className="bg-sage-green text-white px-4 py-2 rounded-lg flex items-center hover:bg-sage-green-dark"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Client
-        </button>
-      </div>
-
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <input
-            type="text"
-            placeholder="Search clients..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sage-green"
-          />
-        </div>
-        <button className="flex items-center px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        {clients.map((client) => {
-          const primaryAddress = client.addresses.find(addr => addr.type === 'primary');
-          const mobilePhone = client.phoneNumbers.find(phone => phone.type === 'mobile');
-          const generalNotes = client.notes.find(note => note.type === 'general');
-          
-          return (
-            <div 
-              key={client.id} 
-              className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start">
-                <div 
-                  className="flex-1 space-y-3 cursor-pointer"
-                  onClick={() => onClientClick(client.id)}
-                >
-                  <div>
-                    <h3 className="font-semibold text-gray-800 text-lg">{client.name}</h3>
-                    {client.hasPets && (
-                      <div className="flex items-center gap-1 text-sage-green text-sm mt-1">
-                        <span className="w-2 h-2 rounded-full bg-sage-green"></span>
-                        Has Pets
-                      </div>
-                    )}
-                  </div>
-                  {primaryAddress && (
-                    <div className="flex items-center text-gray-600">
-                      <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                      <span className="text-sm">{`${primaryAddress.street}, ${primaryAddress.city}, ${primaryAddress.state}`}</span>
-                    </div>
-                  )}
-                  {mobilePhone && (
-                    <div className="flex items-center text-gray-600">
-                      <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
-                      <span className="text-sm">{mobilePhone.number}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center text-gray-600">
-                    <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="text-sm">{client.email}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2 ml-4">
-                  <button 
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Edit button clicked for client:', client.id);
-                      onEditClient(client.id);
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button 
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Delete functionality
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-              {generalNotes && generalNotes.content && (
-                <div className="mt-4 bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm text-gray-600">{generalNotes.content}</p>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </>
-  );
-}
-
-function JobsPage({ jobs, clients, onClientClick, onJobClick }: { jobs: Job[], clients: Client[], onClientClick: (id: string) => void, onJobClick: (id: string) => void }) {
-  return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Jobs</h2>
-        <button className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center">
-          <Plus className="h-4 w-4 mr-2" />
-          Schedule Job
-        </button>
-      </div>
-
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <input
-            type="text"
-            placeholder="Search jobs..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-          />
-        </div>
-        <button className="flex items-center px-4 py-2 border rounded-lg text-gray-600">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        {jobs.map((job) => (
-          <JobCard
-            key={job.id}
-            job={job}
-            client={clients.find(c => c.id === job.clientId)!}
-            onClick={() => onJobClick(job.id)}
-          />
-        ))}
-      </div>
-    </>
   );
 }
 
@@ -540,19 +534,18 @@ function DashboardPage({
 
   // Calculate financial metrics
   const thisWeekJobs = jobs.filter(job => {
-    const jobDate = new Date(job.date);
+    const jobDate = new Date(job.scheduledDate);
     jobDate.setHours(0, 0, 0, 0);
     return jobDate >= startOfWeek && jobDate < today;
   });
 
   const todayJobs = jobs.filter(job => {
-    const jobDate = new Date(job.date);
-    jobDate.setHours(0, 0, 0, 0);
-    return jobDate.getTime() === today.getTime();
+    const jobDate = new Date(job.scheduledDate);
+    return jobDate.toDateString() === today.toDateString();
   });
 
   const allWeekJobs = jobs.filter(job => {
-    const jobDate = new Date(job.date);
+    const jobDate = new Date(job.scheduledDate);
     jobDate.setHours(0, 0, 0, 0);
     return jobDate >= startOfWeek;
   });
@@ -625,8 +618,8 @@ function DashboardPage({
       {/* Jobs Today */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Jobs Today</h2>
-        <div className="space-y-4">
-          {jobs.slice(0, 2).map(job => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {todayJobs.map(job => (
             <JobCard
               key={job.id}
               job={job}
@@ -634,6 +627,11 @@ function DashboardPage({
               onClick={() => onJobClick(job.id)}
             />
           ))}
+          {todayJobs.length === 0 && (
+            <div className="text-gray-500 text-center py-4 col-span-3">
+              No jobs scheduled for today
+            </div>
+          )}
         </div>
       </div>
 

@@ -13,6 +13,13 @@ class ClientService {
    */
   async getAllClients(): Promise<Client[]> {
     console.log('Getting all clients:', this.clients);
+    return Promise.resolve(this.clients.filter(c => !c.archived));
+  }
+
+  /**
+   * Get all clients including archived
+   */
+  async getAllClientsWithArchived(): Promise<Client[]> {
     return Promise.resolve([...this.clients]);
   }
 
@@ -36,6 +43,7 @@ class ClientService {
       id: `client-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      archived: false
     };
     this.clients.push(newClient);
     console.log('Created client:', newClient);
@@ -77,6 +85,50 @@ class ClientService {
     this.clients.splice(index, 1);
     console.log('Client deleted successfully');
     return Promise.resolve(true);
+  }
+
+  /**
+   * Archive a client
+   */
+  async archiveClient(id: string): Promise<Client | null> {
+    console.log('Archiving client:', id);
+    const index = this.clients.findIndex(c => c.id === id);
+    if (index === -1) {
+      console.error('Client not found for archiving:', id);
+      return Promise.resolve(null);
+    }
+
+    const updatedClient: Client = {
+      ...this.clients[index],
+      archived: true,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.clients[index] = updatedClient;
+    console.log('Client archived successfully');
+    return Promise.resolve(updatedClient);
+  }
+
+  /**
+   * Unarchive a client
+   */
+  async unarchiveClient(id: string): Promise<Client | null> {
+    console.log('Unarchiving client:', id);
+    const index = this.clients.findIndex(c => c.id === id);
+    if (index === -1) {
+      console.error('Client not found for unarchiving:', id);
+      return Promise.resolve(null);
+    }
+
+    const updatedClient: Client = {
+      ...this.clients[index],
+      archived: false,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.clients[index] = updatedClient;
+    console.log('Client unarchived successfully');
+    return Promise.resolve(updatedClient);
   }
 
   /**

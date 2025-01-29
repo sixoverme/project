@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
-import { ClientForm } from './ClientForm';
-import { ClientFormData } from '../../interfaces/client';
-import { clientService } from '../../services/clientService';
+import { JobFormData } from '../../interfaces';
+import { JobForm } from './JobForm';
 import { ChevronLeft } from 'lucide-react';
 
-interface AddClientPageProps {
-  onSubmit: (data: ClientFormData) => Promise<void>;
+interface AddJobPageProps {
+  onSubmit: (data: JobFormData) => Promise<void>;
   onCancel: () => void;
 }
 
-export const AddClientPage: React.FC<AddClientPageProps> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState<ClientFormData | null>(null);
+export const AddJobPage: React.FC<AddJobPageProps> = ({ onSubmit, onCancel }) => {
+  const [formData, setFormData] = useState<JobFormData | null>(null);
 
-  const handleFormChange = (data: ClientFormData) => {
+  const handleFormChange = (data: JobFormData) => {
     setFormData(data);
   };
 
@@ -27,7 +26,7 @@ export const AddClientPage: React.FC<AddClientPageProps> = ({ onSubmit, onCancel
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <h2 className="text-xl font-semibold text-[var(--text-primary)] pl-3">Clients</h2>
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] pl-3">Jobs</h2>
         </div>
         <div className="flex gap-2">
           <button
@@ -41,17 +40,16 @@ export const AddClientPage: React.FC<AddClientPageProps> = ({ onSubmit, onCancel
             className="px-4 py-2 bg-[var(--juniper-sage)] text-[var(--text-on-colored)] rounded-md hover:bg-[var(--juniper-dark)]"
             disabled={!formData}
           >
-            Save Client
+            Save Job
           </button>
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4">
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Add New Client</h1>
-        <ClientForm
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Schedule New Job</h1>
+        <JobForm
           onSubmit={handleFormChange}
-          onCancel={() => {}} // We don't need this anymore as cancel is in header
         />
       </div>
     </div>

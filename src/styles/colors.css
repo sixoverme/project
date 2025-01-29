@@ -1,0 +1,27 @@
+:root {
+  /* Brand Colors */
+  --juniper-sage: #526D4E;
+  --juniper-dark: #455B41;
+  --juniper-light: #7A9975;
+  --sage-mist: #F1F5F0;
+
+  /* Background Colors */
+  --background-base: #F5F7F6;  /* Slightly grayish background */
+  --background-card: #FFFFFF;  /* Pure white for cards and forms */
+  --background-muted: #E8ECE9;  /* Muted background for disabled states */
+
+  /* Status Colors - Do Not Change */
+  --status-archive: #F59E0B;
+  --status-delete: #DC2626;
+  --status-success: #059669;
+  --status-error: #DC2626;
+
+  /* Text Colors */
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  --text-on-dark: #FFFFFF;
+  --text-on-colored: #FFFFFF;
+
+  /* Focus Ring Colors */
+  --focus-ring-primary: rgba(82, 109, 78, 0.25); /* Juniper Sage with 25% opacity */
+}

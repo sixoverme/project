@@ -20,9 +20,9 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'rounded font-medium transition-colors focus:outline-none focus:ring-2';
   
   const variantStyles = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-300',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-300',
-    outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-blue-300',
+    primary: 'bg-[var(--juniper-sage)] text-[var(--text-on-colored)] hover:bg-[var(--juniper-dark)] focus:ring-[var(--focus-ring-primary)]',
+    secondary: 'bg-[var(--juniper-dark)] text-[var(--text-on-colored)] hover:bg-[var(--juniper-sage)] focus:ring-[var(--focus-ring-primary)]',
+    outline: 'border-2 border-[var(--juniper-sage)] text-[var(--juniper-sage)] hover:bg-[var(--sage-mist)] focus:ring-[var(--focus-ring-primary)]',
   };
 
   const sizeStyles = {
